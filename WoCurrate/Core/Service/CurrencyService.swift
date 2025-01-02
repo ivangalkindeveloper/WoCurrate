@@ -9,21 +9,46 @@ import Foundation
 
 protocol CurrencyServiceProtocol: Service {
     func getSupported() async throws -> CurrencySupportedList
+    
+    func getLatest(base: String) async throws -> CurrencyLatestList
+    
+    func getHistorical(base: String) async throws -> CurrencyHistoricalList
 }
 
 class CurrencyService: CurrencyServiceProtocol {
-    enum CurrencyEndpoint: String {
+    private enum Endpoint: String {
         case currencies = "/currencies"
+        case latest = "/latest"
+        case historical = "/historical"
+    }
+
+    func getSupported() async throws -> CurrencySupportedList {
+        let model: CurrencySupportedList = try await request(
+            endpoint: Endpoint.currencies.rawValue,
+            method: HTTPMethod.GET)
+        return model
+    }
+
+    func getLatest(base: String) async throws -> CurrencyLatestList {
+        let model: CurrencyLatestList = try await request(
+            endpoint: Endpoint.latest.rawValue,
+            query: ["base": base],
+            method: HTTPMethod.GET)
+        return model
     }
     
-    func getSupported() async throws -> CurrencySupportedList {
-        guard let data = try await get(endpoint: CurrencyEndpoint.currencies.rawValue) else {
-            throw ServiceError.invalidData
-        }
-        guard let model = try? JSONDecoder().decode(CurrencySupportedList.self, from: data) else {
-            throw ServiceError.jsonParsing
-        }
+    func getHistorical(base: String) async throws -> CurrencyHistoricalList {
+        let today = Date()
+        let lastYear = Calendar.current.date(byAdding: .year, value: -1, to: today)!
         
+        let inputFormatter = DateFormatter()
+        inputFormatter.dateFormat = "YYYY-MM-dd"
+        
+        let model: CurrencyHistoricalList = try await request(
+            endpoint: Endpoint.historical.rawValue,
+            query: ["base": base,
+                    "date": inputFormatter.string(from: lastYear)],
+            method: HTTPMethod.GET)
         return model
     }
 }

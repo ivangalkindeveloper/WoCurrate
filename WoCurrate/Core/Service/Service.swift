@@ -7,27 +7,86 @@
 
 import Foundation
 
+enum HTTPMethod: String {
+    case GET = "GET",
+         POST = "POST",
+         PUT = "PUT",
+         DELETE = "DELETE"
+}
+
+extension URLRequest {
+    mutating func applyMethod(
+        method: HTTPMethod?
+    ) -> Void {
+        self.httpMethod = method?.rawValue
+    }
+    
+    mutating func applyHeaders() {
+        self.setValue("Application/json",
+                      forHTTPHeaderField: "Content-Type")
+    }
+}
+
 protocol Service {}
 
 extension Service {
-    func get(endpoint: String) async throws -> Data? {
+    private func prepareRequest(
+        endpoint: String,
+        query: Dictionary<String, String>?,
+        method: HTTPMethod?,
+        body: Encodable? = nil
+    ) -> URLRequest {
         let baseURL: String = "https://api.freecurrencyapi.com/v1"
         let apikey: String = "fca_live_SIO8FEIzd2vdf2gGN5Hjn8brJPAp97MQOc7tWQSJ"
         
-        var request: URLRequest = URLRequest(url: URL(string: "\(baseURL)\(endpoint)?apikey=\(apikey)")!)
-        request.httpMethod = "GET"
+        var urlComponent = URLComponents(string: "\(baseURL)\(endpoint)")!
+        urlComponent.queryItems = [
+            URLQueryItem(name: "apikey", value: apikey),
+        ]
         
-        return await withCheckedContinuation{ continuation in
-            URLSession.shared.dataTask(with: request) { data, response, error in
-                if error != nil {
-                    return continuation.resume(returning: nil)
-                }
-                guard let data = data else {
-                    return continuation.resume(returning: nil)
-                }
-                
-                continuation.resume(returning: data)
-            }.resume()
+        let items: [URLQueryItem] = (query ?? [:]).map{ URLQueryItem(name: $0.key, value: $0.value) }
+        urlComponent.queryItems?.append(contentsOf: items)
+        
+        var request: URLRequest = URLRequest(url: urlComponent.url!)
+        request.applyMethod(method: method)
+        request.applyHeaders()
+        switch method {
+        case .POST:
+            guard let body = body else {
+                break
+            }
+            request.httpBody = try? JSONEncoder().encode(body)
+        default: break
         }
+        
+        return request
+    }
+    
+    func request<T: Codable>(
+        endpoint: String,
+        query: Dictionary<String, String>? = nil,
+        method: HTTPMethod? = nil,
+        body: Encodable? = nil
+    ) async throws -> T {
+        let request: URLRequest = prepareRequest(
+            endpoint: endpoint,
+            query: query,
+            method: method,
+            body: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        if let response = response as? HTTPURLResponse, response.statusCode > 299 {
+            throw ServiceError.invalodStatusCode
+        }
+        guard let model: T = try? JSONDecoder().decode(T.self, from: data) else {
+            throw ServiceError.jsonParsing
+        }
+        
+        return model
     }
 }
+
+
+
+
+

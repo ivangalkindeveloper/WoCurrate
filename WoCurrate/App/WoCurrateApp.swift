@@ -17,19 +17,18 @@ struct WoCurrateApp: App {
 
     var body: some Scene {
         WindowGroup {
-            SupportedListView()
-//            ContentView()
-//                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            SupportedListScreenView()
         }
+    }
+    
+    private func loadRocketSimConnect() {
+        #if DEBUG
+        guard (Bundle(path: "/Applications/RocketSim.app/Contents/Frameworks/RocketSimConnectLinker.nocache.framework")?.load() == true) else {
+            return print("Failed to load linker framework")
+        }
+        print("RocketSim Connect successfully linked")
+        #endif
     }
 }
 
-private func loadRocketSimConnect() {
-    #if DEBUG
-    guard (Bundle(path: "/Applications/RocketSim.app/Contents/Frameworks/RocketSimConnectLinker.nocache.framework")?.load() == true) else {
-        print("Failed to load linker framework")
-        return
-    }
-    print("RocketSim Connect successfully linked")
-    #endif
-}
+
