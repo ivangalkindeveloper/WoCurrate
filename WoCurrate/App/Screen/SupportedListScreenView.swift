@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SupportedListScreenView: View {
-    @StateObject private var viewModel: SupportedListViewModel = .init()
+    @StateObject private var viewModel = SupportedListViewModel()
     
     var body: some View {
         Group {

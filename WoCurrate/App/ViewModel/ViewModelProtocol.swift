@@ -7,9 +7,9 @@
 
 import Foundation
 
-protocol ViewModel: ObservableObject {}
+protocol ViewModelProtocol: ObservableObject {}
 
-extension ViewModel {
+extension ViewModelProtocol {
     func handle(
         execute: @escaping () throws -> Void,
         onError: @escaping () -> Void

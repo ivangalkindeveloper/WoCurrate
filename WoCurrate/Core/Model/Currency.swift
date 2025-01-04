@@ -16,7 +16,9 @@ struct Currency: Codable, Hashable {
     let code: String?
     let namePlural: String?
     let type: String?
-    
+}
+
+private extension Currency {
     enum CodingKeys: String, CodingKey {
         case symbol, name, rounding, code, type
         case symbolNative = "symbol_native"

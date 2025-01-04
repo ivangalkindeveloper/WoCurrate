@@ -8,7 +8,8 @@
 import Foundation
 import SwiftUI
 
-class SupportedListViewModel: ViewModel {
+@MainActor
+class SupportedListViewModel: ViewModelProtocol {
     private let service: CurrencyService = CurrencyService()
     
     @State var navigationPath = NavigationPath()

@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol CurrencyServiceProtocol: Service {
+protocol CurrencyServiceProtocol: ServiceProtocol {
     func getSupported() async throws -> CurrencySupportedList
     
     func getLatest(base: String) async throws -> CurrencyLatestList
@@ -17,24 +17,22 @@ protocol CurrencyServiceProtocol: Service {
 
 class CurrencyService: CurrencyServiceProtocol {
     private enum Endpoint: String {
-        case currencies = "/currencies"
-        case latest = "/latest"
-        case historical = "/historical"
+        case currencies = "/currencies",
+             latest = "/latest",
+             historical = "/historical"
     }
 
     func getSupported() async throws -> CurrencySupportedList {
-        let model: CurrencySupportedList = try await request(
+        return try await request(
             endpoint: Endpoint.currencies.rawValue,
             method: HTTPMethod.GET)
-        return model
     }
 
     func getLatest(base: String) async throws -> CurrencyLatestList {
-        let model: CurrencyLatestList = try await request(
+        return try await request(
             endpoint: Endpoint.latest.rawValue,
-            query: ["base": base],
-            method: HTTPMethod.GET)
-        return model
+            method: HTTPMethod.GET,
+            queries: ["base": base])
     }
     
     func getHistorical(base: String) async throws -> CurrencyHistoricalList {
@@ -44,11 +42,10 @@ class CurrencyService: CurrencyServiceProtocol {
         let inputFormatter = DateFormatter()
         inputFormatter.dateFormat = "YYYY-MM-dd"
         
-        let model: CurrencyHistoricalList = try await request(
+        return try await request(
             endpoint: Endpoint.historical.rawValue,
-            query: ["base": base,
-                    "date": inputFormatter.string(from: lastYear)],
-            method: HTTPMethod.GET)
-        return model
+            method: HTTPMethod.GET,
+            queries: ["base": base,
+                    "date": inputFormatter.string(from: lastYear)])
     }
 }

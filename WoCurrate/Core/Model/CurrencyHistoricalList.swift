@@ -9,7 +9,9 @@ import Foundation
 
 struct CurrencyHistoricalList: Codable {
     let data: [Date : CurrencyLatestList]?
-    
+}
+
+private extension CurrencyHistoricalList {
     enum CodingKeys: String, CodingKey {
         case data
     }

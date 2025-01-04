@@ -9,7 +9,9 @@ import Foundation
 
 struct CurrencyLatestList: Codable {
     let data: [String : Double]?
-    
+}
+
+private extension CurrencyLatestList {
     enum CodingKeys: String, CodingKey {
         case data
     }

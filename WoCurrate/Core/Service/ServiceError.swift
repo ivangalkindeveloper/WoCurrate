@@ -6,7 +6,10 @@
 //
 
 enum ServiceError: Error {
+    case invalidURL
     case invalidData
+    case client
+    case server
     case invalodStatusCode
     case jsonParsing
     case requestError(description: String)
