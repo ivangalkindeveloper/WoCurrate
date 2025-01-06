@@ -11,7 +11,7 @@ struct CurrencySupportedList: Codable {
     let data: [String : Currency]?
 }
 
-private extension CurrencySupportedList {
+fileprivate extension CurrencySupportedList {
     enum CodingKeys: String, CodingKey {
         case data
     }

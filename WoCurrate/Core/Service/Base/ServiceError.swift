@@ -8,7 +8,9 @@
 enum ServiceError: Error {
     case invalidURL
     case invalidData
+    case invalidResponse
     case client
+    case unauthorized
     case server
     case invalodStatusCode
     case jsonParsing

@@ -7,18 +7,26 @@
 
 import Foundation
 
-protocol ServiceProtocol {}
+protocol ServiceProtocol {
+    var session: URLSession { get }
+    var decoder: JSONDecoder { get }
+    var encoder: JSONEncoder { get }
+}
 
-extension ServiceProtocol {
+class Service: ServiceProtocol {
+    let session: URLSession = URLSession.shared
+    let decoder: JSONDecoder = JSONDecoder()
+    let encoder: JSONEncoder = JSONEncoder()
+    
     private func buildRequest(
         endpoint: String,
-        method: HTTPMethod?,
+        method: HttpMethod?,
         queries: [String: String]?,
         additionalHeaders: [String: String]? = nil,
         body: Encodable? = nil
     ) throws -> URLRequest {
-        let baseURL: String = "https://api.freecurrencyapi.com/v1"
-        let apiKey: String = "fca_live_SIO8FEIzd2vdf2gGN5Hjn8brJPAp97MQOc7tWQSJ"
+        let baseURL = "https://api.freecurrencyapi.com/v1"
+        let apiKey = "fca_live_SIO8FEIzd2vdf2gGN5Hjn8brJPAp97MQOc7tWQSJ"
 
         guard var urlComponent = URLComponents(string: "\(baseURL)\(endpoint)") else {
             throw ServiceError.invalidURL
@@ -27,7 +35,9 @@ extension ServiceProtocol {
         // MARK: Queries
 
         urlComponent.queryItems = [
-            URLQueryItem(name: "apikey", value: apiKey),
+            URLQueryItem(
+                name: "apikey",
+                value: apiKey),
         ]
         for query in (queries ?? [:]).enumerated() {
             urlComponent.queryItems?.append(
@@ -44,20 +54,23 @@ extension ServiceProtocol {
     }
     
     // MARK: Method
+
     private func addMethod(
         request: inout URLRequest,
-        method: HTTPMethod?
-    ) -> Void {
+        method: HttpMethod?
+    ) {
         request.httpMethod = method?.rawValue
     }
     
     // MARK: Headers
+
     private func addHeaders(
         request: inout URLRequest,
         headers: [String: String]?
-    ) -> Void {
-        request.setValue("Application/json",
-                         forHTTPHeaderField: "Content-Type")
+    ) {
+        request.setValue(
+            "application/json",
+            forHTTPHeaderField: "Content-Type")
         for header in (headers ?? [:]).enumerated() {
             request.setValue(
                 header.element.key,
@@ -66,18 +79,20 @@ extension ServiceProtocol {
     }
     
     // MARK: Body
+
     private func addBody(
         request: inout URLRequest,
         body: Encodable?
-    ) -> Void {
-        if let body = body {
-            request.httpBody = try? JSONEncoder().encode(body)
+    ) {
+        guard let body = body else {
+            return
         }
+        request.httpBody = try? self.encoder.encode(body)
     }
 
     func request<T: Codable>(
         endpoint: String,
-        method: HTTPMethod? = nil,
+        method: HttpMethod? = nil,
         queries: [String: String]? = nil,
         additionalHeaders: [String: String]? = nil,
         body: Encodable? = nil
@@ -96,17 +111,36 @@ extension ServiceProtocol {
         addBody(
             request: &request,
             body: body)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let response = response as? HTTPURLResponse {
-            switch response.statusCode {
-                    case 200 ..< 400: break
-                    case 400 ..< 500: throw ServiceError.client
-                    case 500 ..< 600: throw ServiceError.server
-                    default: throw ServiceError.invalodStatusCode
-                }
+
+        let (data, response) = try await self.session.data(for: request)
+        guard let response = response as? HTTPURLResponse else {
+            throw ServiceError.invalidResponse
         }
-        guard let model: T = try? JSONDecoder().decode(T.self, from: data) else {
+        
+        if response.statusCode == 403 {
+            do {
+                let commonService = CommonService()
+                try await commonService.refreshTokens()
+            } catch {
+                throw ServiceError.unauthorized
+            }
+            
+            return try await self.request(
+                endpoint: endpoint,
+                method: method,
+                queries: queries,
+                additionalHeaders: additionalHeaders,
+                body: body)
+        }
+        
+        switch response.statusCode {
+            case 200 ..< 400: break
+            case 400 ..< 500: throw ServiceError.client
+            case 500 ..< 600: throw ServiceError.server
+            default: throw ServiceError.invalodStatusCode
+        }
+        
+        guard let model: T = try? self.decoder.decode(T.self, from: data) else {
             throw ServiceError.jsonParsing
         }
 

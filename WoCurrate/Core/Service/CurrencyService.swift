@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol CurrencyServiceProtocol: ServiceProtocol {
+protocol CurrencyServiceProtocol {
     func getSupported() async throws -> CurrencySupportedList
     
     func getLatest(base: String) async throws -> CurrencyLatestList
@@ -15,7 +15,7 @@ protocol CurrencyServiceProtocol: ServiceProtocol {
     func getHistorical(base: String) async throws -> CurrencyHistoricalList
 }
 
-class CurrencyService: CurrencyServiceProtocol {
+class CurrencyService: Service, CurrencyServiceProtocol {
     private enum Endpoint: String {
         case currencies = "/currencies",
              latest = "/latest",
@@ -25,13 +25,13 @@ class CurrencyService: CurrencyServiceProtocol {
     func getSupported() async throws -> CurrencySupportedList {
         return try await request(
             endpoint: Endpoint.currencies.rawValue,
-            method: HTTPMethod.GET)
+            method: .GET)
     }
 
     func getLatest(base: String) async throws -> CurrencyLatestList {
         return try await request(
             endpoint: Endpoint.latest.rawValue,
-            method: HTTPMethod.GET,
+            method: .GET,
             queries: ["base": base])
     }
     
@@ -44,7 +44,7 @@ class CurrencyService: CurrencyServiceProtocol {
         
         return try await request(
             endpoint: Endpoint.historical.rawValue,
-            method: HTTPMethod.GET,
+            method: .GET,
             queries: ["base": base,
                     "date": inputFormatter.string(from: lastYear)])
     }

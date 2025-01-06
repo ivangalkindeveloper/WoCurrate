@@ -41,13 +41,6 @@ class SupportedListViewModel: ViewModelProtocol {
         }
         navigationPath.append(SupportedListViewModel.Path.detail(code: code))
     }
-    
-    @ViewBuilder func navigationDestination(value: Path) -> some View {
-        switch value {
-        case let .detail(code):
-            DetailScreenView(path: $navigationPath, iso2Code: code)
-        }
-    }
 }
 
 extension SupportedListViewModel {

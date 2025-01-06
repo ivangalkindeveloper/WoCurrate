@@ -11,7 +11,7 @@ struct CurrencyHistoricalList: Codable {
     let data: [Date : CurrencyLatestList]?
 }
 
-private extension CurrencyHistoricalList {
+fileprivate extension CurrencyHistoricalList {
     enum CodingKeys: String, CodingKey {
         case data
     }
