@@ -9,24 +9,27 @@ import SwiftUI
 
 struct SupportedCurrencyCard: View {
     let currency: Currency
+    let onTap: () -> Void
     
     var body: some View {
-        HStack(alignment: .top) {
-            if let symbol = currency.symbol {
-                Text(symbol)
-                    .padding(.trailing, 16)
-            }
-            HStack(alignment: .center) {
-                if let name = currency.name {
-                    Text(name)
+        Button(action: onTap) {
+            HStack(alignment: .top) {
+                if let symbol = currency.symbol {
+                    Text(symbol)
+                        .padding(.trailing, 16)
                 }
-                if let type = currency.type {
-                    Text(type)
+                HStack(alignment: .center) {
+                    if let name = currency.name {
+                        Text(name)
+                    }
+                    if let type = currency.type {
+                        Text(type)
+                    }
                 }
-            }
-            Spacer()
-            if let code = currency.code{
-                Text(code)
+                Spacer()
+                if let code = currency.code{
+                    Text(code)
+                }
             }
         }
         .padding(.horizontal, 16)

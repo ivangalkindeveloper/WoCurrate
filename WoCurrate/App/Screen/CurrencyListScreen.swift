@@ -1,5 +1,5 @@
 //
-//  SupportedListScreen.swift
+//  CurrencyListScreen.swift
 //  WoCurrate
 //
 //  Created by Иван Галкин on 31.12.2024.
@@ -7,9 +7,11 @@
 
 import SwiftUI
 
-struct SupportedListScreen: View {
-    @StateObject private var viewModel = SupportedListViewModel()
-
+struct CurrencyListScreen: View {
+    @EnvironmentObject private var coordinator: Coordinator
+    
+    @StateObject private var viewModel = CurrencyListViewModel()
+    
     var body: some View {
         NavigationStack {
             Group {
@@ -22,12 +24,16 @@ struct SupportedListScreen: View {
                                 viewModel.supportedList,
                                 id: \.self
                             ) { currency in
-                                NavigationLink(
-                                    value: currency
+                                SupportedCurrencyCard(
+                                    currency: currency
                                 ) {
-                                    SupportedCurrencyCard(
-                                        currency: currency
-                                    )
+                                    coordinator.push(
+                                        route: RouteScreen(
+                                            .detail,
+                                            CurrencyDetailArguments(
+                                                currency: currency
+                                            )
+                                        ))
                                 }
                             }
                         }
@@ -37,11 +43,6 @@ struct SupportedListScreen: View {
             .navigationTitle("Currencies")
             .safeAreaPadding()
             .background(Color.white)
-            .navigationDestination(
-                for: Currency.self
-            ) { currency in
-                DetailScreen(currency: currency)
-            }
         }
         .onAppear {
             self.viewModel.fetchSupportedCurrencies()
@@ -50,5 +51,5 @@ struct SupportedListScreen: View {
 }
 
 #Preview {
-    SupportedListScreen()
+    CurrencyListScreen()
 }

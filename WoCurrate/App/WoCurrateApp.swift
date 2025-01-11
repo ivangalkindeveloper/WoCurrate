@@ -15,7 +15,7 @@ struct WoCurrateApp: App {
 
     var body: some Scene {
         WindowGroup {
-            SupportedListScreen()
+            CoordinatorView()
         }
     }
     

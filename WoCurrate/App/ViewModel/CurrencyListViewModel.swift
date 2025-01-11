@@ -5,14 +5,12 @@
 //  Created by Иван Галкин on 31.12.2024.
 //
 
-import Foundation
 import SwiftUI
 
 @MainActor
-class SupportedListViewModel: ViewModelProtocol {
+final class CurrencyListViewModel: ViewModelProtocol {
     private let service: CurrencyService = CurrencyService()
     
-    @State var navigationPath = NavigationPath()
     @Published var isLoading: Bool = true
     @Published var supportedList: [Currency] = []
     
@@ -33,18 +31,5 @@ class SupportedListViewModel: ViewModelProtocol {
             },
             onError: {}
         )
-    }
-    
-    func onDetailTap(currency: Currency) {
-        guard let code = currency.code else {
-            return;
-        }
-        navigationPath.append(SupportedListViewModel.Path.detail(code: code))
-    }
-}
-
-extension SupportedListViewModel {
-    enum Path: Hashable {
-        case detail(code: String)
     }
 }
